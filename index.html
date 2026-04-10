@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎂 HAPPY BIRTHDAY LUCIE 🎂</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+  :root {
+    --yellow: #CCB800;
+    --orange: #CC5500;
+    --red: #CC0033;
+    --black: #0A0A0A;
+    --dark: #111111;
+    --white: #DDDDDD;
+    --scan: rgba(0,0,0,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--yellow);
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+    height: 100vh;
+    cursor: none;
+  }
+
+  /* CRT scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scan) 2px,
+      var(--scan) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+
+
+  /* TITLE SCREEN */
+  #titleScreen {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    gap: 28px;
+  }
+
+  .title-top {
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 3px;
+    animation: blink 1.2s step-end infinite;
+  }
+
+  .title-main {
+    font-size: clamp(20px, 4vw, 38px);
+    color: var(--yellow);
+    text-align: center;
+    line-height: 1.6;
+    text-shadow: 3px 3px 0 var(--orange);
+  }
+
+  .title-name {
+    font-size: clamp(28px, 6vw, 56px);
+    color: var(--white);
+    text-shadow: 3px 3px 0 var(--red);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
+  .title-arcade {
+    width: 120px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--red), var(--orange), var(--yellow), var(--orange), var(--red));
+    animation: slide 1s linear infinite;
+    background-size: 200%;
+  }
+
+  @keyframes slide { 0%{background-position:0%} 100%{background-position:200%} }
+
+  .title-insert {
+    font-size: 10px;
+    color: var(--yellow);
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .title-controls {
+    font-size: 7px;
+    color: #666;
+    line-height: 2.2;
+    text-align: center;
+  }
+
+  /* GAME AREA */
+  #gameWrap {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50px;
+    background: var(--black);
+    border-bottom: 3px solid var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 10;
+    font-size: 9px;
+  }
+  #hud span { color: var(--yellow); }
+  #scoreVal, #hiVal, #livesVal { color: var(--white); }
+
+  /* CANVAS */
+  #gameCanvas {
+    display: block;
+    position: absolute;
+    top: 50px;
+    left: 0;
+  }
+
+  /* GAME OVER / WIN overlay */
+  #overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+    text-align: center;
+    padding: 20px;
+  }
+  #overlay.show { display: flex; }
+  #overlayTitle { font-size: clamp(18px, 4vw, 36px); color: var(--yellow); text-shadow: 3px 3px 0 var(--orange); }
+  #overlayMsg { font-size: 8px; color: var(--white); line-height: 2.4; }
+  #overlayBtn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 14px 28px;
+    background: var(--yellow);
+    color: var(--black);
+    border: none;
+    cursor: pointer;
+    animation: blink 1s step-end infinite;
+  }
+  #overlayBtn:hover { background: var(--white); }
+
+  /* custom cursor */
+  #cursor {
+    position: fixed;
+    width: 12px; height: 12px;
+    background: var(--yellow);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    image-rendering: pixelated;
+    clip-path: polygon(0 0,100% 0,100% 30%,30% 30%,30% 100%,0 100%);
+  }
+
+  /* mobile buttons */
+  #mobileControls {
+    display: none;
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 16px;
+    z-index: 500;
+  }
+  @media (max-width: 700px) { #mobileControls { display: flex; } }
+  .mbtn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    width: 70px; height: 70px;
+    background: var(--yellow);
+    color: var(--black);
+    border: 4px solid var(--white);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- TITLE SCREEN -->
+<div id="titleScreen">
+  <div class="title-top">*** ARCADE BIRTHDAY SPECIAL ***</div>
+  <div class="title-main">HAPPY<br>BIRTHDAY</div>
+  <div class="title-name">LUCIE!</div>
+  <div class="title-arcade"></div>
+  <div class="title-insert">— PRESS ENTER OR TAP —</div>
+  <div class="title-controls">
+    SPACE / ↑ = SKOK &nbsp;|&nbsp; ↓ = DŘEP<br>
+    VYBER SI NAROZENINOVÝ DÁR! 🎂
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="gameWrap">
+  <div id="hud">
+    <span>SCORE <span id="scoreVal">0</span></span>
+    <span>★ LUCIE RUNNER ★</span>
+    <span>LIVES <span id="livesVal">♥♥♥</span></span>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div id="overlayTitle">GAME OVER</div>
+  <div id="overlayMsg"></div>
+  <button id="overlayBtn" onclick="restartGame()">▶ ZNOVU HRÁT</button>
+</div>
+
+<!-- MOBILE -->
+<div id="mobileControls">
+  <button class="mbtn" id="btnJump">↑ SKOK</button>
+  <button class="mbtn" id="btnDuck">↓ DŘEP</button>
+</div>
+
+<script>
+// ── CURSOR ──
+const cur = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top = e.clientY + 'px';
+});
+
+// ── TITLE ──
+const titleScreen = document.getElementById('titleScreen');
+const gameWrap = document.getElementById('gameWrap');
+let gameStarted = false;
+
+function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
+  titleScreen.style.display = 'none';
+  gameWrap.style.display = 'block';
+  initGame();
+}
+document.addEventListener('keydown', e => {
+  if (!gameStarted && (e.key === 'Enter' || e.key === ' ')) startGame();
+});
+titleScreen.addEventListener('click', startGame);
+titleScreen.addEventListener('touchstart', startGame);
+
+// ── GAME ──
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight - 50;
+}
+resize();
+window.addEventListener('resize', () => { resize(); if(gameStarted) initGame(); });
+
+const GROUND = () => canvas.height - 80;
+const GRAVITY = 0.7;
+const JUMP_FORCE = -16;
+
+let score, lives, speed, frameCount, obstacles, gifts, particles;
+let player, gameOver, won;
+
+const BIRTHDAY_MSGS = [
+  "Přeji ti všechno nejlepší!",
+  "Ať ti jdou narozeniny krásně!",
+  "Jsi prostě nejlepší! 🎂",
+  "Hodně zdraví, lásky a štěstí!",
+];
+
+const GIFTS = ['🎂','🎁','🎈','🌟','💛','🥳'];
+
+function initGame() {
+  score = 0;
+  lives = 3;
+  speed = 5;
+  frameCount = 0;
+  obstacles = [];
+  gifts = [];
+  particles = [];
+  gameOver = false;
+  won = false;
+  document.getElementById('overlay').classList.remove('show');
+  updateHUD();
+
+  player = {
+    x: 90,
+    y: GROUND(),
+    w: 32, h: 48,
+    vy: 0,
+    jumping: false,
+    ducking: false,
+    frame: 0,
+    frameTimer: 0,
+    invincible: 0,
+  };
+
+  requestAnimationFrame(loop);
+}
+
+function updateHUD() {
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('livesVal').textContent = '♥'.repeat(Math.max(0, lives));
+}
+
+// ── PIXEL MARCELA ──
+function drawMarcela(x, y, duck, frame, invincible) {
+  if (invincible > 0 && Math.floor(invincible/4) % 2 === 0) return;
+  ctx.save();
+  const px = Math.floor(x);
+  const py = Math.floor(y);
+  const f = frame % 4;
+
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(px - 2, GROUND() + (duck ? 20 : 44), 36, 6);
+
+  if (duck) {
+    // ducking sprite: flat body
+    // body
+    ctx.fillStyle = '#FFE600';
+    ctx.fillRect(px, py + 24, 32, 16); // dress/body
+    // head
+    ctx.fillStyle = '#FFD580';
+    ctx.fillRect(px + 4, py + 12, 24, 16);
+    // hair
+    ctx.fillStyle = '#8B3A00';
+    ctx.fillRect(px + 4, py + 10, 24, 6);
+    ctx.fillRect(px + 4, py + 16, 4, 8);
+    ctx.fillRect(px + 24, py + 16, 4, 8);
+    // eye
+    ctx.fillStyle = '#000';
+    ctx.fillRect(px + 10, py + 18, 4, 4);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(px + 11, py + 18, 2, 2);
+    // legs
+    ctx.fillStyle = '#FF6B00';
+    const legOff = [-1,1,-1,1][f] * 4;
+    ctx.fillRect(px + 6, py + 38, 8, 4);
+    ctx.fillRect(px + 18, py + 38, 8, 4);
+    // birthday hat
+    ctx.fillStyle = '#FF0044';
+    ctx.beginPath();
+    ctx.moveTo(px + 16, py + 2);
+    ctx.lineTo(px + 8, py + 12);
+    ctx.lineTo(px + 24, py + 12);
+    ctx.fill();
+    ctx.fillStyle = '#FFE600';
+    ctx.fillRect(px + 8, py + 10, 16, 3);
+    return;
+  }
+
+  // STANDING / RUNNING sprite
+  // legs animation
+  const legA = [-8, -4, 0, 4][f];
+  const legB = [4, 0, -8, -4][f];
+
+  // leg left
+  ctx.fillStyle = '#FF6B00';
+  ctx.fillRect(px + 6, py + 34, 10, 14 + legA);
+  // shoe left
+  ctx.fillStyle = '#222';
+  ctx.fillRect(px + 4, py + 46 + legA, 14, 6);
+
+  // leg right
+  ctx.fillStyle = '#FF6B00';
+  ctx.fillRect(px + 18, py + 34, 10, 14 + legB);
+  // shoe right
+  ctx.fillStyle = '#222';
+  ctx.fillRect(px + 16, py + 46 + legB, 14, 6);
+
+  // dress / skirt
+  ctx.fillStyle = '#FF0044';
+  ctx.fillRect(px + 2, py + 24, 28, 16);
+  // dress highlight
+  ctx.fillStyle = '#FF4477';
+  ctx.fillRect(px + 4, py + 24, 8, 6);
+
+  // body
+  ctx.fillStyle = '#FFD580';
+  ctx.fillRect(px + 6, py + 12, 20, 16);
+
+  // arms
+  const armSwing = [-6,-3,0,-3][f];
+  ctx.fillStyle = '#FFD580';
+  ctx.fillRect(px - 4, py + 14 + armSwing, 10, 8);
+  ctx.fillRect(px + 26, py + 14 - armSwing, 10, 8);
+
+  // head
+  ctx.fillStyle = '#FFD580';
+  ctx.fillRect(px + 4, py + 0, 24, 16);
+
+  // hair
+  ctx.fillStyle = '#8B3A00';
+  ctx.fillRect(px + 2, py - 4, 28, 8);
+  ctx.fillRect(px + 2, py + 0, 4, 10);
+  ctx.fillRect(px + 26, py + 0, 4, 10);
+
+  // eyes
+  ctx.fillStyle = '#000';
+  ctx.fillRect(px + 8, py + 4, 5, 5);
+  ctx.fillRect(px + 18, py + 4, 5, 5);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(px + 9, py + 4, 2, 2);
+  ctx.fillRect(px + 19, py + 4, 2, 2);
+
+  // smile
+  ctx.fillStyle = '#FF6699';
+  ctx.fillRect(px + 10, py + 11, 12, 3);
+  ctx.fillStyle = '#FFD580';
+  ctx.fillRect(px + 10, py + 11, 2, 2);
+  ctx.fillRect(px + 20, py + 11, 2, 2);
+
+  // birthday party hat
+  ctx.fillStyle = '#FFE600';
+  ctx.beginPath();
+  ctx.moveTo(px + 16, py - 16);
+  ctx.lineTo(px + 6, py - 2);
+  ctx.lineTo(px + 26, py - 2);
+  ctx.fill();
+  ctx.fillStyle = '#FF0044';
+  ctx.fillRect(px + 6, py - 4, 20, 3);
+  // star on hat
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(px + 14, py - 18, 4, 4);
+
+  ctx.restore();
+}
+
+// ── OBSTACLES ──
+function spawnObstacle() {
+  const types = ['cake','bottle','balloon','disco'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  const tall = Math.random() < 0.4;
+  obstacles.push({
+    x: canvas.width + 20,
+    y: tall ? GROUND() - 40 : GROUND(),
+    w: 28, h: tall ? 56 : 40,
+    type,
+  });
+}
+
+function drawObstacle(ob) {
+  const x = Math.floor(ob.x);
+  const y = Math.floor(ob.y);
+  ctx.save();
+  switch(ob.type) {
+    case 'cake':
+      // base
+      ctx.fillStyle = '#FF0044';
+      ctx.fillRect(x, y + 10, 28, 30);
+      // top
+      ctx.fillStyle = '#FFE600';
+      ctx.fillRect(x + 2, y, 24, 14);
+      // candle
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(x + 12, y - 14, 5, 14);
+      ctx.fillStyle = '#FF6B00';
+      ctx.fillRect(x + 13, y - 18, 3, 6);
+      break;
+    case 'bottle':
+      ctx.fillStyle = '#00CC44';
+      ctx.fillRect(x + 6, y, 16, 40);
+      ctx.fillRect(x + 10, y - 10, 8, 12);
+      ctx.fillStyle = '#FFE600';
+      ctx.fillRect(x + 4, y + 12, 20, 6);
+      break;
+    case 'balloon':
+      ctx.fillStyle = '#FF0044';
+      ctx.beginPath();
+      ctx.arc(x + 14, y + 14, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#FF6699';
+      ctx.fillRect(x + 10, y + 2, 6, 4);
+      ctx.fillStyle = '#666';
+      ctx.fillRect(x + 13, y + 28, 2, 14);
+      break;
+    case 'disco':
+      ctx.fillStyle = '#3344aa';
+      ctx.fillRect(x, y + 4, 28, 28);
+      for(let i=0;i<4;i++) for(let j=0;j<4;j++) {
+        const shade = (i+j) % 2 === 0 ? '#5566cc' : '#2233aa';
+        ctx.fillStyle = shade;
+        ctx.fillRect(x+i*7+1,y+4+j*7+1,5,5);
+      }
+      break;
+  }
+  ctx.restore();
+}
+
+// ── GIFTS ──
+function spawnGift() {
+  gifts.push({
+    x: canvas.width + 10,
+    y: GROUND() - 60 - Math.random() * 80,
+    emoji: GIFTS[Math.floor(Math.random() * GIFTS.length)],
+    bob: Math.random() * Math.PI * 2,
+  });
+}
+
+// ── PARTICLES ──
+function burst(x, y, col, n = 12) {
+  for(let i=0;i<n;i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random()-0.5)*8,
+      vy: -Math.random()*8 - 2,
+      life: 40 + Math.random()*20,
+      maxLife: 60,
+      col,
+      size: 4 + Math.random()*6,
+    });
+  }
+}
+
+// ── STARS BG ──
+const stars = Array.from({length:80}, () => ({
+  x: Math.random(), y: Math.random(),
+  s: Math.random()*2+1,
+  t: Math.random()*Math.PI*2,
+}));
+
+function drawBG() {
+  // sky gradient
+  const grd = ctx.createLinearGradient(0,0,0,GROUND());
+  grd.addColorStop(0,'#060008');
+  grd.addColorStop(1,'#100020');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // stars
+  stars.forEach(s => {
+    s.t += 0.02;
+    ctx.fillStyle = `rgba(255,230,100,${0.4+Math.sin(s.t)*0.3})`;
+    ctx.fillRect(s.x*canvas.width, s.y*GROUND(), s.s, s.s);
+  });
+
+  // city silhouette
+  ctx.fillStyle = '#0D0020';
+  const buildings = [
+    [0,120,60,180],[50,80,70,200],[110,100,80,180],[180,60,50,220],
+    [220,140,90,140],[300,90,60,190],[350,50,70,230],[410,110,80,170],
+    [480,70,60,210],[530,130,90,150],[610,85,70,195],[670,100,80,180],
+    [740,60,80,220],[810,120,70,160],[870,80,90,200],[950,50,80,230],
+    [1020,110,90,170],[1100,90,70,190],[1160,70,80,210],[1230,130,60,150],
+  ];
+  buildings.forEach(([x,h,w,]) => {
+    const bx = (x - frameCount*0.3) % (canvas.width + 100) + (canvas.width + 100) % (canvas.width + 100) - 100;
+    ctx.fillRect(bx, GROUND() - h, w, h);
+    // windows
+    ctx.fillStyle = Math.random() > 0.97 ? '#FFE600' : '#1a003a';
+    for(let wy=0;wy<h-10;wy+=18) for(let wx=6;wx<w-6;wx+=16) {
+      if(Math.random()>0.5) ctx.fillRect(bx+wx, GROUND()-h+wy+6, 8, 10);
+    }
+    ctx.fillStyle = '#0D0020';
+  });
+
+  // ground
+  ctx.fillStyle = '#1a0030';
+  ctx.fillRect(0, GROUND(), canvas.width, canvas.height - GROUND());
+
+  // ground line
+  ctx.fillStyle = '#FFE600';
+  ctx.fillRect(0, GROUND(), canvas.width, 4);
+
+  // ground tiles
+  ctx.fillStyle = '#2a0050';
+  for(let gx = -(frameCount * speed % 60); gx < canvas.width; gx += 60) {
+    ctx.fillRect(gx, GROUND() + 4, 55, canvas.height - GROUND() - 4);
+  }
+  ctx.fillStyle = '#330060';
+  for(let gx = -(frameCount * speed % 60); gx < canvas.width; gx += 60) {
+    ctx.fillRect(gx + 55, GROUND() + 4, 5, canvas.height - GROUND() - 4);
+  }
+}
+
+// ── MAIN LOOP ──
+function loop() {
+  if (gameOver) return;
+
+  frameCount++;
+  score++;
+  if (score % 500 === 0) speed = Math.min(speed + 0.5, 16);
+  updateHUD();
+
+  // spawn
+  const interval = Math.max(60, 130 - score/100);
+  if (frameCount % Math.floor(interval) === 0) spawnObstacle();
+  if (frameCount % 200 === 0) spawnGift();
+
+  // player physics
+  if (!player.ducking) {
+    player.vy += GRAVITY;
+    player.y += player.vy;
+  }
+  const ground = GROUND() - (player.ducking ? 20 : 0);
+  if (player.y >= ground) {
+    player.y = ground;
+    player.vy = 0;
+    player.jumping = false;
+  }
+
+  // player anim
+  if (!player.jumping) {
+    player.frameTimer++;
+    if (player.frameTimer > 8) { player.frame++; player.frameTimer = 0; }
+  }
+  if (player.invincible > 0) player.invincible--;
+
+  // obstacles
+  obstacles.forEach(ob => ob.x -= speed);
+  obstacles = obstacles.filter(ob => ob.x > -60);
+
+  // gifts
+  gifts.forEach(g => { g.x -= speed; g.bob += 0.08; });
+  gifts = gifts.filter(g => g.x > -30);
+
+  // particles
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.3; p.life--;
+  });
+  particles = particles.filter(p => p.life > 0);
+
+  // collision
+  const ph = player.ducking ? 24 : 48;
+  const py = player.ducking ? player.y + 20 : player.y;
+
+  if (player.invincible === 0) {
+    obstacles.forEach(ob => {
+      if (
+        player.x + 8 < ob.x + ob.w - 4 &&
+        player.x + 24 > ob.x + 4 &&
+        py < ob.y + ob.h &&
+        py + ph > ob.y
+      ) {
+        lives--;
+        player.invincible = 90;
+        burst(player.x + 16, py + ph/2, '#FF0044');
+        updateHUD();
+        if (lives <= 0) endGame(false);
+      }
+    });
+  }
+
+  // gift collect
+  gifts = gifts.filter(g => {
+    if (
+      player.x + 4 < g.x + 24 &&
+      player.x + 28 > g.x &&
+      py < g.y + 24 &&
+      py + ph > g.y
+    ) {
+      score += 200;
+      burst(g.x + 12, g.y + 12, '#FFE600');
+      return false;
+    }
+    return true;
+  });
+
+  // WIN condition
+  if (score >= 5000) { endGame(true); return; }
+
+  // ── DRAW ──
+  drawBG();
+
+  // gifts
+  gifts.forEach(g => {
+    ctx.font = '28px serif';
+    ctx.fillText(g.emoji, g.x, g.y + Math.sin(g.bob)*6);
+  });
+
+  // obstacles
+  obstacles.forEach(drawObstacle);
+
+  // particles
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.col;
+    ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+    ctx.globalAlpha = 1;
+  });
+
+  // player
+  const drawY = player.ducking ? player.y - 24 : player.y - 48;
+  drawMarcela(player.x, drawY, player.ducking, player.frame, player.invincible);
+
+  // score display on canvas
+  ctx.fillStyle = '#FFE600';
+  ctx.font = '10px "Press Start 2P"';
+  ctx.fillText('SCORE: ' + score, 16, 30);
+  if (score >= 4000) {
+    ctx.fillStyle = '#FF0044';
+    ctx.fillText('HURRY! ALMOST DONE!', canvas.width/2 - 120, 30);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ── END ──
+function endGame(win) {
+  gameOver = true;
+  const ov = document.getElementById('overlay');
+  const msg = BIRTHDAY_MSGS[Math.floor(Math.random()*BIRTHDAY_MSGS.length)];
+  if (win) {
+    document.getElementById('overlayTitle').textContent = '🎂 YOU WIN! 🎂';
+    document.getElementById('overlayTitle').style.color = '#FFE600';
+    document.getElementById('overlayMsg').innerHTML =
+      `LUCIE, ${msg}\n\nFINAL SCORE: ${score}\n\nGRATULUJI!!`;
+  } else {
+    document.getElementById('overlayTitle').textContent = 'GAME OVER';
+    document.getElementById('overlayTitle').style.color = '#FF0044';
+    document.getElementById('overlayMsg').innerHTML =
+      `SCORE: ${score}\n\nZkus to znovu, Lucie! 💛`;
+  }
+  ov.classList.add('show');
+}
+
+function restartGame() {
+  gameStarted = false;
+  gameOver = false;
+  document.getElementById('overlay').classList.remove('show');
+  titleScreen.style.display = 'flex';
+  gameWrap.style.display = 'none';
+}
+
+// ── INPUT ──
+const keys = {};
+document.addEventListener('keydown', e => {
+  if (!gameStarted) return;
+  if ((e.key === ' ' || e.key === 'ArrowUp') && !player.jumping && !player.ducking) {
+    player.vy = JUMP_FORCE;
+    player.jumping = true;
+  }
+  if (e.key === 'ArrowDown') player.ducking = true;
+  e.preventDefault();
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowDown') player.ducking = false;
+});
+
+// mobile
+document.getElementById('btnJump').addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!player.jumping && !player.ducking) { player.vy = JUMP_FORCE; player.jumping = true; }
+});
+document.getElementById('btnDuck').addEventListener('touchstart', e => {
+  e.preventDefault();
+  player.ducking = true;
+});
+document.getElementById('btnDuck').addEventListener('touchend', () => player.ducking = false);
+</script>
+</body>
+</html>
