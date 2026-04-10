@@ -56,18 +56,20 @@
     align-items: center;
     justify-content: center;
     z-index: 100;
-    gap: 28px;
+    gap: clamp(10px, 3vh, 28px);
+    padding: 16px;
   }
 
   .title-top {
-    font-size: 11px;
+    font-size: clamp(7px, 2vw, 11px);
     color: var(--orange);
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     animation: blink 1.2s step-end infinite;
+    text-align: center;
   }
 
   .title-main {
-    font-size: clamp(20px, 4vw, 38px);
+    font-size: clamp(14px, 5vw, 38px);
     color: var(--yellow);
     text-align: center;
     line-height: 1.6;
@@ -75,10 +77,11 @@
   }
 
   .title-name {
-    font-size: clamp(28px, 6vw, 56px);
+    font-size: clamp(20px, 8vw, 56px);
     color: var(--white);
     text-shadow: 3px 3px 0 var(--red);
     animation: pulse 2s ease-in-out infinite;
+    text-align: center;
   }
 
   @keyframes pulse {
@@ -97,14 +100,15 @@
   @keyframes slide { 0%{background-position:0%} 100%{background-position:200%} }
 
   .title-insert {
-    font-size: 10px;
+    font-size: clamp(7px, 2vw, 10px);
     color: var(--yellow);
     animation: blink 0.8s step-end infinite;
+    text-align: center;
   }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
   .title-controls {
-    font-size: 7px;
+    font-size: clamp(6px, 1.5vw, 7px);
     color: #666;
     line-height: 2.2;
     text-align: center;
